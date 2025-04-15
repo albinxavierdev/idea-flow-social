@@ -1,6 +1,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
 import { useState, useEffect } from "react";
 import { EditorToolbar } from './editor/EditorToolbar';
 
@@ -22,6 +23,11 @@ export function MarkdownEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right'],
+        defaultAlignment: 'left',
+      }),
     ],
     content: value,
     onUpdate: ({ editor }) => {

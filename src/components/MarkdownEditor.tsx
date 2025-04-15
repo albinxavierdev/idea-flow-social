@@ -1,6 +1,8 @@
 
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { useState, useEffect } from "react";
-import MDEditor from '@uiw/react-md-editor';
+import { EditorToolbar } from './editor/EditorToolbar';
 
 interface MarkdownEditorProps {
   value: string;
@@ -15,39 +17,44 @@ export function MarkdownEditor({
   autoSave = true,
   onAutoSave
 }: MarkdownEditorProps) {
-  const [content, setContent] = useState(value);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // Handle changes and trigger onChange
-  const handleChange = (val: string | undefined) => {
-    const newContent = val || "";
-    setContent(newContent);
-    onChange(newContent);
-  };
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+    ],
+    content: value,
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      onChange(html);
+    },
+  });
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSave) return;
+    if (!autoSave || !editor) return;
     
     const timer = setTimeout(() => {
-      if (content !== value) {
-        onChange(content);
+      const html = editor.getHTML();
+      if (html !== value) {
+        onChange(html);
         setLastSaved(new Date());
         if (onAutoSave) onAutoSave();
       }
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [content, value, onChange, autoSave, onAutoSave]);
+  }, [editor, value, onChange, autoSave, onAutoSave]);
 
   return (
-    <div data-color-mode="light" className="space-y-2">
-      <MDEditor
-        value={content}
-        onChange={handleChange}
-        height={400}
-        preview="edit"
+    <div className="space-y-2">
+      <EditorToolbar editor={editor} />
+      
+      <EditorContent 
+        editor={editor} 
+        className="min-h-[400px] border rounded-b-lg p-4 prose max-w-none"
       />
+      
       {lastSaved && (
         <div className="text-xs text-gray-500 text-right">
           Auto-saved: {lastSaved.toLocaleTimeString()}
